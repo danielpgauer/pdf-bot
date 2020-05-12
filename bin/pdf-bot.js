@@ -47,7 +47,7 @@ var defaultConfig = {
       return decaySchedule[retries - 1] ? decaySchedule[retries - 1] : 0
     },
     generationMaxTries: 5,
-    parallelism: 4,
+    parallelism: 20,
     webhookRetryStrategy: function(job, retries) {
       return decaySchedule[retries - 1] ? decaySchedule[retries - 1] : 0
     },
@@ -418,10 +418,12 @@ program
 
     return queue.isBusy()
       .then(function (isBusy) {
+        /*
         if (isBusy) {
           queue.close()
           process.exit(0)
         }
+        */
 
         var shiftAll = function () {
           var maxTries = configuration.queue.generationMaxTries
@@ -490,7 +492,7 @@ function processJob(job, configuration, exitProcess = true) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       reject(new Error('expired'))
-    }, 20000);
+    }, 10000);
 
     queue.processJob(generator, job, configuration.webhook).then(function (response) {
       if (error.isError(response)) {
