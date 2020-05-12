@@ -487,20 +487,27 @@ function processJob(job, configuration, exitProcess = true) {
 
   var generator = createPdfGenerator(configuration.storagePath, generatorOptions, storagePlugins)
 
-  return queue.processJob(generator, job, configuration.webhook).then(function (response) {
-    if (error.isError(response)) {
-      console.error(response.message)
-      if (exitProcess) {
-        queue.close()
-        process.exit(1)
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject(new Error('expired'))
+    }, 20000);
+
+    queue.processJob(generator, job, configuration.webhook).then(function (response) {
+      if (error.isError(response)) {
+        console.error(response.message)
+        if (exitProcess) {
+          queue.close()
+          process.exit(1)
+        }
+      } else {
+        console.log('Job ID ' + job.id + ' was processed.')
+        if (exitProcess) {
+          queue.close()
+          process.exit(0)
+        }
       }
-    } else {
-      console.log('Job ID ' + job.id + ' was processed.')
-      if (exitProcess) {
-        queue.close()
-        process.exit(0)
-      }
-    }
+      resolve(true)
+    })
   })
 }
 
