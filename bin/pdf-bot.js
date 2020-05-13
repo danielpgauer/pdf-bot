@@ -47,7 +47,7 @@ var defaultConfig = {
       return decaySchedule[retries - 1] ? decaySchedule[retries - 1] : 0
     },
     generationMaxTries: 5,
-    parallelism: 20,
+    parallelism: 5,
     webhookRetryStrategy: function(job, retries) {
       return decaySchedule[retries - 1] ? decaySchedule[retries - 1] : 0
     },
