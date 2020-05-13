@@ -23,25 +23,42 @@ function createApi(createQueue, options = {}) {
       res.status(401).json(error.createErrorResponse(error.ERROR_INVALID_TOKEN))
       return
     }
+    
+    let jobs = Array.isArray(req.body)
+      ? req.body
+      : [ req.body ]
 
-    queue
-      .addToQueue({
-        url: req.body.url,
-        meta: req.body.meta || {}
-      }).then(function (response) {
-        queue.close()
+    let response = []
+    for (let job of jobs) {
+      queue
+        .addToQueue(
+          {
+            url: job.url,
+            meta: job.meta || {}
+          }
+        )
+        .then(function (rs) {
+          queue.close()
 
-        if (error.isError(response)) {
-          res.status(422).json(response)
-          return
-        }
+          if (error.isError(rs)) {
+            response.push({
+              status: 422,
+              response: rs
+            })
+            return
+          }
 
-        if (options.postPushCommand && options.postPushCommand.length > 0) {
-          childProcess.spawn.apply(null, options.postPushCommand)
-        }
-
-        res.status(201).json(response)
-      })
+          if (options.postPushCommand && options.postPushCommand.length > 0) {
+            childProcess.spawn.apply(null, options.postPushCommand)
+          }
+    
+          response.push({
+            status: 201,
+            response: rs
+          })
+        })
+     }
+     res.status(201).json(response)
   })
 
   return api
