@@ -15,7 +15,7 @@ function createApi(createQueue, options = {}) {
     debug('Warning: The server should be protected using a token.')
   }
 
-  api.post('/', function(req, res) {
+  api.post('/', async (req, res) => {
     var queue = createQueue()
     var authHeader = req.get('Authorization')
 
@@ -30,34 +30,33 @@ function createApi(createQueue, options = {}) {
 
     let response = []
     for (let job of jobs) {
-      queue
-        .addToQueue(
-          {
-            url: job.url,
-            meta: job.meta || {}
-          }
-        )
-        .then(function (rs) {
-          queue.close()
+      let rs = await queue
+          .addToQueue(
+            {
+              url: job.url,
+              meta: job.meta || {}
+            }
 
-          if (error.isError(rs)) {
-            response.push({
-              status: 422,
-              response: rs
-            })
-            return
-          }
-
-          if (options.postPushCommand && options.postPushCommand.length > 0) {
-            childProcess.spawn.apply(null, options.postPushCommand)
-          }
-    
+        if (error.isError(rs)) {
           response.push({
-            status: 201,
+            status: 422,
             response: rs
           })
+          return
+        }
+
+        if (options.postPushCommand && options.postPushCommand.length > 0) {
+          childProcess.spawn.apply(null, options.postPushCommand)
+        }
+
+        response.push({
+          status: 201,
+          response: rs
         })
      }
+
+     queue.close()
+
      res.status(201).json(response)
   })
 
