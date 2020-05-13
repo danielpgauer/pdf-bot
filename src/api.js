@@ -36,6 +36,7 @@ function createApi(createQueue, options = {}) {
               url: job.url,
               meta: job.meta || {}
             }
+          )
 
         if (error.isError(rs)) {
           response.push({
